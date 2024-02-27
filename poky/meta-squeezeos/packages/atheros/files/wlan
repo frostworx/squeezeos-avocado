@@ -24,10 +24,6 @@ case "$1" in
 
 	/lib/atheros/wmiconfig -eth1 --filter=all
 
-	# Temporary possible work-a-round to fix wireless connectivity issues
-	# Disable power save mode
-	/lib/atheros/wmiconfig -eth1 --power maxperf
-
 	# todo region codes?
 
 	# Start wpa_supplicant

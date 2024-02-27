@@ -41,10 +41,6 @@ case "$1" in
 	${WORKAREA}/wmiconfig -i eth1 --filter=all
 	sleep 1;
 
-	# Temporary possible work-a-round to fix wireless connectivity issues
-	# Disable power save mode
-	${WORKAREA}/wmiconfig -i eth1 --power maxperf
-
 	# todo region codes?
 	sleep 1;
 
