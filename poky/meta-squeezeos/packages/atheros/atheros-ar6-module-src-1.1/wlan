@@ -3,13 +3,29 @@
 # Read configuration variable file if it is present
 [ -r /etc/wlan.conf ] && . /etc/wlan.conf
 
+# Get hardware revision (as string)
+hwrev=`cat /proc/cpuinfo | grep "Revision" | cut -f2 -d" "`
+
+# Convert to number
+hwrev=`expr $hwrev + 0`
+
+/usr/bin/logger -s "wlan: hw rev: $hwrev"
+
+# Load AR6xx3 driver for hw rev >= 9
+if [ $hwrev -ge 9 ]
+    then
+        echo "Using AR6xx3..."
+        export WORKAREA=/lib/atheros3
+        export EEPROM=${WORKAREA}/calData_WB44_030_D0400_spur_enabled_040312_2G_Only.bin
+    else
+        echo "Using AR6xx2..."
+        export WORKAREA=/lib/atheros
+        export EEPROM=${WORKAREA}/calData_ar6102_15dBm.bin
+fi
+
 case "$1" in
     start)
         /usr/bin/logger -s "wlan: starting"
-
-	# Load wlan drivers
-	export WORKAREA=/lib/atheros
-	export EEPROM=${WORKAREA}/calData_ar6102_15dBm.bin
 
 	# Set MAC address to the same as Ethernet
 	macaddr=`/sbin/ifconfig eth0 | sed -ne 's/.*\(..:..:..:..:..:..\).*/\1/p'`
@@ -19,32 +35,37 @@ case "$1" in
 	    SETMAC="--setmac $macaddr"
 	fi
 
-	/lib/atheros/loadAR6000l.sh $SETMAC
+	${WORKAREA}/loadAR6000l.sh $SETMAC
 	if [ $? -ne 0 ]; then
 	    /usr/bin/logger -s "wlan: failed"
 	    exit -1
 	fi
+	sleep 1;
 
 	# act on settings from /etc/wlan.conf
 	if [ "${filterall}" == "on" ]; then
-		/lib/atheros/wmiconfig -eth1 --filter=all
+		${WORKAREA}/wmiconfig -eth1 --filter=all
 	fi
 
 	if [ "${gonly}" == "on" ]; then
-		/lib/atheros/wmiconfig --wmode gonly	
+		${WORKAREA}/wmiconfig --wmode gonly
 	fi
 
 	if [ "${arpwatch}" == "on" ]; then
-		/lib/atheros/watch-arp.sh
+		${WORKAREA}/watch-arp.sh
 	fi
 
 	# todo region codes?
+	sleep 1;
 
 	# Start wpa_supplicant
 	/usr/bin/logger "Starting wpa_supplicant"
 	/usr/sbin/wpa_supplicant -B -Dwext -ieth1 -c/etc/wpa_supplicant.conf
+	sleep 1;
+
 	/usr/sbin/wpa_cli -B -a/etc/network/wpa_action
 	/usr/bin/logger "Started wpa_supplicant"
+	sleep 1;
 
 	/usr/bin/logger -s "wlan started"
 	;;
@@ -71,7 +92,7 @@ case "$1" in
 	fi
 
 	# remove wlan driver
-	/lib/atheros/loadAR6000l.sh unloadall
+	${WORKAREA}/loadAR6000l.sh unloadall
 
 	/usr/bin/logger -s "wlan stopped"
 	;;
