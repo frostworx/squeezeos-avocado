@@ -2,16 +2,25 @@ DESCRIPTION = "wpa-supplicant"
 SECTION = "base"
 LICENSE = "GNU GPL"
 
-PR = "r0"
+PR = "r1"
 
 SRC_URI = " \
 	https://w1.fi/releases/wpa_supplicant-${PV}.tar.gz \
-	file://disable-eapol-werror.patch;patch=1;pnum=0 \
-	file://0001-nl80211-add-extra-ies-only-if-allowed-by-driver.patch;patch=1;pnum=0 \
-	file://0002-AP-guard-FT-SAE-code-with-CONFIG_IEEE80211R_AP.patch;patch=1;pnum=0 \
+	file://0001-Enable-TLSv1.0-by-default.patch;patch=1;pnum=0 \
+	file://0004-Allow-legacy-renegotiation-to-fix-PEAP-issues-with-s.patch;patch=1;pnum=0 \
+	file://0005-OpenSSL-Drop-security-level-to-0-with-OpenSSL-3.0-wh.patch;patch=1;pnum=0 \
+	file://0006-Disable-Werror-for-eapol_test.patch;patch=1;pnum=0 \
+	file://0007-nl80211-add-extra-ies-only-if-allowed-by-driver.patch;patch=1;pnum=0 \
+	file://0008-AP-guard-FT-SAE-code-with-CONFIG_IEEE80211R_AP.patch;patch=1;pnum=0 \
+	file://0009-OpenSSL-Apply-connection-flags-before-reading-certif.patch;patch=1;pnum=0 \
+	file://0010-Don-t-upgrade-SSL-security-level-to-1-when-setting-c.patch;patch=1;pnum=0 \
+	file://0012-WNM-Choose-the-best-available-BSS-not-just-the-first.patch;patch=1;pnum=0 \
+	file://0013-wpa_supplicant-Fix-wpa_supplicant-configuration-pars.patch;patch=1;pnum=0 \
+	file://0014-Abort-ongoing-scan.patch;patch=1;pnum=0 \
+	file://0015-Override-ieee80211w-from-pmf-for-AP-mode-in-wpa_supp.patch;patch=1;pnum=0 \
 	file://bogus-SSID-too-long_2.9.patch;patch=1;pnum=0 \
 	file://Revert-wext-Increase-scan-timeout_2.9.patch;patch=1;pnum=0 \
-	file://defconfig-${PV} \
+	file://defconfig \
 	"
 
 SRC_URI_append_baby = " \
@@ -30,7 +39,7 @@ FULL_OPTIMIZATION = "-O1 -s"
 inherit autotools
 
 do_configure () {
-	install -m 0644 ${WORKDIR}/defconfig-${PV} ${S}/.config
+	install -m 0644 ${WORKDIR}/defconfig ${S}/.config
 }
 
 do_compile() {
