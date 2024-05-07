@@ -5,9 +5,9 @@
                       * packet is too short or too long
                       */
 -                    AR_DEBUG_PRINTF("TOO SHORT or TOO LONG\n");
-+                    int i;
 +                    AR_DEBUG_PRINTF("TOO SHORT or TOO LONG %d bytes: ",pPacket->ActualLength);
 +#ifdef DEBUG
++                    int i;
 +                    for(i = 0; i < a_netbuf_to_len(skb); i++)
 +                       A_PRINTF("%02x ", ((A_UINT8 *)a_netbuf_to_data(skb))[i]);
 +#endif

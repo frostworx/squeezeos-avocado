@@ -3,7 +3,7 @@ SECTION = "base"
 LICENSE = "binary only"
 
 PV = "1.1"
-PR = "r1"
+PR = "r2"
 DV = "83"
 
 PROVIDES = "atheros-ar6-module"
@@ -17,7 +17,6 @@ SRC_URI="${RALPHY_SQUEEZEOS}/atheros-ar6ksdk.build_sw.${DV}.tar.gz \
 	 file://BMI_read_mem_failure.patch;patch=1 \
 	 file://change-ar6k-semaphore-type.patch;patch=1 \
 	\
-	 file://0001-enable-debug-output.patch;patch=1 \
 	 file://0002-too-short-debug.patch;patch=1 \
 	 file://0003-driver-print-version.patch;patch=1 \
 	 file://0004-backport-old-ioctl-target-stats.patch;patch=1 \
