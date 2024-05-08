@@ -1,0 +1,11 @@
+--- AR6kSDK.build_sw.83/host/os/linux/ar6000_drv.c.orig	2024-05-07 11:35:29.703140641 -0400
++++ AR6kSDK.build_sw.83/host/os/linux/ar6000_drv.c	2024-05-08 07:05:45.050184615 -0400
+@@ -604,7 +604,7 @@
+     AR6000_SPIN_UNLOCK(&ar->arLock, 0);
+ 
+     debug_hdr_ptr = dbglog_get_debug_hdr_ptr(ar);
+-    printk("debug_hdr_ptr: 0x%x\n", debug_hdr_ptr);
++    AR_DEBUG_PRINTF("debug_hdr_ptr: 0x%x\n", debug_hdr_ptr);
+ 
+     /* Get the contents of the ring buffer */
+     if (debug_hdr_ptr) {

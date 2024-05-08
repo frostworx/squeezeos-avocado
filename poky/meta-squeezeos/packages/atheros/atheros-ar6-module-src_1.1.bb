@@ -3,7 +3,7 @@ SECTION = "base"
 LICENSE = "binary only"
 
 PV = "1.1"
-PR = "r2"
+PR = "r3"
 DV = "83"
 
 PROVIDES = "atheros-ar6-module"
@@ -25,6 +25,8 @@ SRC_URI="${RALPHY_SQUEEZEOS}/atheros-ar6ksdk.build_sw.${DV}.tar.gz \
 	 file://0007-log-power-setting.patch;patch=1 \
 	 file://0008-log-phy-rate-change.patch;patch=1 \
 	 file://0009-arp-dhcp-logging.patch;patch=1 \
+	 file://0010-driver-debug-hdr-ptr.patch;patch=1 \
+	 file://0011-driver-debug-stop-endpoint.patch;patch=1 \
 	\
 	 file://bmiloader \
 	 file://wmiconfig \
