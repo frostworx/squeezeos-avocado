@@ -30,6 +30,7 @@ function settingsShow(self, menuItem)
 	local settingsChanged = false
 	local gonlyEnabled = _fileMatch("/etc/wlan.conf", "^gonly=on")
 	local arpwatchEnabled = _fileMatch("/etc/wlan.conf", "^arpwatch=on")
+	local filterallEnabled = _fileMatch("/etc/wlan.conf", "^filterall=on")
 
 	local window = Window("help_list", menuItem.text, 'settingstitle')
 	local menu = SimpleMenu("menu", {
@@ -73,6 +74,28 @@ function settingsShow(self, menuItem)
 							),
 						focusGained = function(event)
 							self.howto = Textarea("help_text", self:string("GONLY_HOWTO"))
+							self.menu:setHeaderWidget(self.howto)
+							self.menu:reLayout()
+						end
+					},
+					{
+						text = self:string("FILTERALL_ENABLE"),
+						style = 'item_choice',
+						check = Checkbox("checkbox",
+								function(_, isSelected)
+									settingsChanged = true
+									if isSelected then
+										log:warn("wlan.conf setting filterall=on");
+										_fileSub("/etc/wlan.conf", "^filterall=.*$", "filterall=on")  
+									else
+										log:warn("wlan.conf setting filterall=off");
+										_fileSub("/etc/wlan.conf", "^filterall=.*$", "filterall=off")
+									end
+								end,
+								filterallEnabled
+							),
+						focusGained = function(event)
+							self.howto = Textarea("help_text", self:string("FILTERALL_HOWTO"))
 							self.menu:setHeaderWidget(self.howto)
 							self.menu:reLayout()
 						end
