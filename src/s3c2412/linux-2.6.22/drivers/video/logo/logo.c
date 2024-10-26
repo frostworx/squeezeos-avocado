@@ -37,7 +37,7 @@ extern const struct linux_logo logo_superh_mono;
 extern const struct linux_logo logo_superh_vga16;
 extern const struct linux_logo logo_superh_clut224;
 extern const struct linux_logo logo_m32r_clut224;
-extern const struct linux_logo logo_logitech_clut224;
+extern const struct linux_logo logo_lyrion_clut224;
 extern const struct linux_logo logo_battery_clut224;
 
 const struct linux_logo *fb_find_logo(int depth)
@@ -112,7 +112,7 @@ const struct linux_logo *fb_find_logo(int depth)
 				logo = &logo_battery_clut224;
 			}
 			else {
-				logo = &logo_logitech_clut224;
+				logo = &logo_lyrion_clut224;
 			}
 		}
 #endif
