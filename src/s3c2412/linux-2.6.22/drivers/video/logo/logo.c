@@ -21,7 +21,7 @@
 #include <asm/bootinfo.h>
 #endif
 
-#ifdef CONFIG_LOGO_LOGITECH_CLUT224
+#ifdef CONFIG_LOGO_LYRION_CLUT224
 extern bool jive_is_battery_flat(int *pbat);
 #endif
 
@@ -106,7 +106,7 @@ const struct linux_logo *fb_find_logo(int depth)
 		/* M32R Linux logo */
 		logo = &logo_m32r_clut224;
 #endif
-#ifdef CONFIG_LOGO_LOGITECH_CLUT224
+#ifdef CONFIG_LOGO_LYRION_CLUT224
 		{
 			if (jive_is_battery_flat(NULL)) {
 				logo = &logo_battery_clut224;
