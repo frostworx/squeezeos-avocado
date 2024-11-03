@@ -2,9 +2,9 @@ DESCRIPTION = "The Fraunhofer FDK AAC Codec Library."
 SECTION = "libs"
 LICENSE = "Apache 2.0"
 
-PR="r0"
+PR="r1"
 
-SRC_URI = "${RALPHY_SQUEEZEOS}/${PN}-${PV}-072f2cd.tar.gz \
+SRC_URI = "${RALPHY_SQUEEZEOS}/${PN}-${PV}.tar.gz \
            file://remove-encoders.patch;patch=1 \
 "
 S="${WORKDIR}/${PN}-${PV}"
