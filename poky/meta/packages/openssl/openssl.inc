@@ -21,7 +21,7 @@ export AS = "${CC} -c"
 
 PACKAGES =+ "libcrypto libssl"
 FILES_libcrypto = "${libdir}/libcrypto.so.* ${libdir}/engines-1.1/*.so"
-FILES_libssl = "${libdir}/libssl.so.* ${libdir}/ssl/*.cnf ${libdir}/ssl/misc/*"
+FILES_libssl = "${libdir}/libssl.so.* ${libdir}/ssl/*.cnf"
 
 do_configure () {
 	cd util
