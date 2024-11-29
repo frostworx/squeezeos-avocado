@@ -1,0 +1,49 @@
+Description: compute PROJECT_VERSION and make sure to pass it to all project() calls
+ Otherwise the later project() call will override PROJECT_VERSION
+Author: Mattia Rizzolo <mattia@debian.org>
+Last-Update: 2020-05-06
+Bug-Debian: https://bugs.debian.org/942795
+Forwarded: no
+
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -3,7 +3,6 @@
+ 
+ cmake_minimum_required (VERSION 3.1 FATAL_ERROR)
+ 
+-project (soxr C)
+ set (DESCRIPTION_SUMMARY
+     "High quality, one-dimensional sample-rate conversion library")
+ 
+@@ -29,7 +28,11 @@
+ math (EXPR SO_VERSION_MINOR "${SO_VERSION_AGE}")
+ math (EXPR SO_VERSION_PATCH "${SO_VERSION_REVISION}")
+ 
++set (PROJECT_VERSION
++    ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH})
++set (SO_VERSION ${SO_VERSION_MAJOR}.${SO_VERSION_MINOR}.${SO_VERSION_PATCH})
+ 
++project (soxr VERSION "${PROJECT_VERSION}" LANGUAGES C)
+ 
+ # Main options:
+ 
+@@ -101,7 +104,7 @@
+ endif ()
+ 
+ if (${BUILD_EXAMPLES})
+-  project (${PROJECT_NAME}) # Adds c++ compiler
++  project (${PROJECT_NAME} VERSION "${PROJECT_VERSION}") # Adds c++ compiler
+ endif ()
+ 
+ if (WITH_OPENMP)
+@@ -253,10 +256,6 @@
+ 
+ # Top-level:
+ 
+-set (PROJECT_VERSION
+-    ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH})
+-set (SO_VERSION ${SO_VERSION_MAJOR}.${SO_VERSION_MINOR}.${SO_VERSION_PATCH})
+-
+ configure_file (
+   ${PROJECT_SOURCE_DIR}/${PROJECT_NAME}-config.h.in
+   ${PROJECT_BINARY_DIR}/${PROJECT_NAME}-config.h)
