@@ -2,6 +2,8 @@ SUMMARY = "The SoX Resampler library"
 HOMEPAGE = "https://sourceforge.net/projects/soxr/"
 LICENSE = "LGPLv2.1"
 
+PR=r1
+
 inherit cmake
 
 SRC_URI = " \
@@ -28,6 +30,10 @@ EXTRA_OECMAKE += " \
     -DWITH_PFFFT=OFF \
     -Wno-dev \
 "
+
+do_install_append() {
+	chmod 755 ${D}${layout_libdir}/libsoxr.so.0\.*
+}
 
 do_stage() {
         autotools_stage_all
