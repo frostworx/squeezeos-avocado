@@ -1,0 +1,491 @@
+--- a/src/audio/decode/visualizer.c	2024-12-04 16:08:43.615784220 -0500
++++ b/src/audio/decode/visualizer.c	2024-12-04 16:07:53.535780559 -0500
+@@ -0,0 +1,116 @@
++#include "common.h"
++#include "ui/jive.h"
++
++#include <pthread.h>
++
++#include <stdio.h>
++#include <sys/mman.h>
++
++#define VIS_BUF_SIZE 16384
++
++static struct vis_t {
++	pthread_rwlock_t rwlock;
++	u32_t buf_size;
++	u32_t buf_index;
++	bool running;
++	u32_t rate;
++	time_t updated;
++	s16_t buffer[VIS_BUF_SIZE];
++} * vis_mmap = NULL;
++
++static bool running = false; // cached version of running so now playing status can be read without lock
++static int vis_fd = -1;
++static char *mac_address = NULL;
++
++static void _reopen(void) {
++	char shm_path[40];
++
++	if (vis_mmap) {
++		munmap(vis_mmap, sizeof(struct vis_t));
++		vis_mmap = NULL;
++	}
++
++	if (vis_fd != -1) {
++		close(vis_fd);
++		vis_fd = -1;
++	}
++
++	if (!mac_address) {
++		mac_address = platform_get_mac_address();
++	}
++
++	sprintf(shm_path, "/squeezelite-%s", mac_address ? mac_address : "");
++
++	vis_fd = shm_open(shm_path, O_RDWR, 0666);
++	if (vis_fd > 0) {
++		vis_mmap = mmap(NULL, sizeof(struct vis_t), PROT_READ | PROT_WRITE, MAP_SHARED, vis_fd, 0);
++		if (vis_mmap == MAP_FAILED) {
++			close(vis_fd);
++			vis_fd = -1;
++			vis_mmap = NULL;
++		}
++	}
++}
++
++// check status of mmap, attempt to open or reopen if it has not been updated recently
++// this allows squeezelite to be restarted and to map a different block of memory
++void vis_check(void) {
++	static time_t lastopen = 0;
++	time_t now = time(NULL);
++
++	if (!vis_mmap) {
++		if (now - lastopen > 5) {
++			_reopen();
++			lastopen = now;
++		}
++		if (!vis_mmap) return;
++	}
++
++	pthread_rwlock_rdlock(&vis_mmap->rwlock);
++
++	running = vis_mmap->running;
++
++	if (running && now - vis_mmap->updated > 5) {
++		pthread_rwlock_unlock(&vis_mmap->rwlock);
++		_reopen();
++		lastopen = now;
++	} else {
++		pthread_rwlock_unlock(&vis_mmap->rwlock);
++	}
++}
++
++void vis_lock(void) {
++	if (!vis_mmap) return;
++	pthread_rwlock_rdlock(&vis_mmap->rwlock);
++}
++
++void vis_unlock(void) {
++	if (!vis_mmap) return;
++	pthread_rwlock_unlock(&vis_mmap->rwlock);
++}
++
++bool vis_get_playing(void) {
++	if (!vis_mmap) return false;
++	return running;
++}
++
++u32_t vis_get_rate(void) {
++	if (!vis_mmap) return 0;
++	return vis_mmap->rate;
++}
++
++s16_t *vis_get_buffer(void) {
++	if (!vis_mmap) return NULL;
++	return vis_mmap->buffer;
++}
++
++u32_t vis_get_buffer_len(void) {
++	if (!vis_mmap) return 0;
++	return vis_mmap->buf_size;
++}
++
++u32_t vis_get_buffer_idx(void) {
++	if (!vis_mmap) return 0;
++	return vis_mmap->buf_index;
++}
++
+--- a/src/audio/decode/visualizer.h	2024-12-04 15:40:41.494327990 -0500
++++ b/src/audio/decode/visualizer.h	2017-01-15 09:49:31.000000000 -0500
+@@ -0,0 +1,10 @@
++extern void vis_check(void);
++extern void vis_lock(void);
++extern void vis_unlock(void);
++
++extern bool vis_get_playing(void);
++extern u32_t vis_get_rate(void);
++
++extern s16_t *vis_get_buffer(void);
++extern u32_t vis_get_buffer_len(void);
++extern u32_t vis_get_buffer_idx(void);
+diff --git a/Makefile.am b/Makefile.am
+index 0277976c1..a8c854928 100644
+--- a/Makefile.am
++++ b/Makefile.am
+@@ -208,6 +208,7 @@ libdecode_la_SOURCES = \
+ 	src/audio/decode/decode_sample.c \
+ 	src/audio/decode/decode_vorbis.c \
+ 	src/audio/decode/decode_alac.c \
++	src/audio/decode/visualizer.c \
+ 	src/audio/decode/visualizer_vumeter.c \
+ 	src/audio/decode/visualizer_spectrum.c \
+ 	src/audio/kiss_fft.c
+diff --git a/src/audio/decode/visualizer_spectrum.c b/src/audio/decode/visualizer_spectrum.c
+index 07e0a04bd..adb397229 100644
+--- a/src/audio/decode/visualizer_spectrum.c
++++ b/src/audio/decode/visualizer_spectrum.c
+@@ -6,12 +6,10 @@
+ 
+ #include "common.h"
+ 
+-#include "audio/mqueue.h"
+-#include "audio/fifo.h"
+-#include "audio/streambuf.h"
+ #include "audio/decode/decode.h"
+ #include "audio/decode/decode_priv.h"
+ #include "audio/kiss_fft.h"
++#include "visualizer.h"
+ 
+ #include <math.h>
+ 
+@@ -32,22 +30,24 @@ static int power_map[32] = {
+   1371400, 1501931, 1639645, 1784670, 1937131
+ }; 
+ 
++#define X_SCALE_LOG 20
++
+ // The maximum number of input samples sent to the FFT.
+ // This is the actual number of input points for a combined
+ // stereo signal.
+ // For separate stereo signals, the number of input points for
+ // each signal is half of the value.
+-#define MAX_SAMPLE_WINDOW 1024
++#define MAX_SAMPLE_WINDOW 1024 * X_SCALE_LOG
+ 
+ // The maximum number of subbands forming the output of the FFT.
+ // The is the actual number of output points for a combined
+ // stereo signal.
+ // For separate stereo signals, the number of output points for
+ // each signal is half of the value.
+-#define MAX_SUBBANDS MAX_SAMPLE_WINDOW / 2
++#define MAX_SUBBANDS MAX_SAMPLE_WINDOW / 2 / X_SCALE_LOG
+ 
+ // The minimum size of the FFT that we'll do.
+-#define MIN_SUBBANDS 32
++#define MIN_SUBBANDS 16
+ 
+ // The minimum total number of input samples to consider for the FFT.
+ // If the sample window used is smaller, then we will use multiple
+@@ -116,6 +116,11 @@ double filter_window[MAX_SAMPLE_WINDOW];
+ // based on a db/KHz value.
+ double preemphasis[MAX_SUBBANDS];
+ 
++// Lookup table to index the FFT result into the subband to
++// produce a log scale on the x axis
++int decade_idx[MAX_SUBBANDS];
++int decade_len[MAX_SUBBANDS];
++
+ // Used in power computation across multiple sample windows.
+ // For a small window size, this could be stack based.
+ float avg_power[2 * MAX_SUBBANDS];
+@@ -242,7 +247,7 @@ int decode_spectrum_init( lua_State *L) {
+ 	// input to the FFT. If we're halving the bandwidth (by
+ 	// averaging adjacent samples), we're going to need twice
+ 	// as many.
+-	sample_window = num_subbands * 2;
++	sample_window = num_subbands * 2 * X_SCALE_LOG;
+ 
+ 	if( sample_window < MIN_FFT_INPUT_SAMPLES) {
+ 		num_windows = MIN_FFT_INPUT_SAMPLES / sample_window;
+@@ -260,7 +265,7 @@ int decode_spectrum_init( lua_State *L) {
+ 		double const2;
+ 		int w;
+ 
+-		double subband_width;
++		double e;
+ 		double freq_sum;
+ 		double scale_db;
+ 		int s;
+@@ -284,16 +289,23 @@ int decode_spectrum_init( lua_State *L) {
+ 		}
+ 
+ 		// Compute the preemphasis
+-		subband_width = 22.05 / num_subbands;
+ 		freq_sum = 0;
+ 		scale_db = 0;
+ 
+-		for( s = 0; s < num_subbands; s++) {
++		// compute the decade scale
++		e = log(num_subbands * X_SCALE_LOG) / log(num_subbands);
++
++		decade_idx[0] = 1;
++		for( s = 0; s < num_subbands - 1; s++) {
++			decade_idx[s+1] = pow( s+1, e) + 1;
++			decade_len[s] = decade_idx[s+1] - decade_idx[s];
++
+ 			while( freq_sum > 1) {
+ 				freq_sum -= 1;
+ // TODO: needed as parameter?
+ //				scale_db += preemphasis_db_per_khz;
+-				scale_db += ( 0x10000 >> 16);
++//				scale_db += ( 0x10000 >> 16);
++				scale_db += 1.2; // 1.2 dB per kHz
+ 
+ 			}
+ 			if( scale_db != 0) {
+@@ -301,8 +313,15 @@ int decode_spectrum_init( lua_State *L) {
+ 			} else {
+ 				preemphasis[s] = 1;
+ 			}
+-			freq_sum += subband_width;
++			freq_sum += (vis_get_rate() / 1000) / ((float)(num_subbands * X_SCALE_LOG) / decade_len[s]);
+ 		}
++		decade_len[s] = (num_subbands * X_SCALE_LOG) - decade_idx[s] + 1;
++		preemphasis[s] = pow( 10, ( scale_db / 10.0));
++
++//		for( s = 0; s < num_subbands; s++) {
++//			printf("subband: %d, decade_idx: %d, decade_len: %d, preemphasis: %f\n", s, decade_idx[s], decade_len[s], preemphasis[s]);
++//		}
++
+ 	}
+ 
+ 	// Return calculated number of bars for each channel
+@@ -324,9 +343,10 @@ int decode_spectrum( lua_State *L) {
+ 	int w;
+ 	int ch;
+ 
+-	// Shortcut if audio isn't running
+-	if( !( decode_audio->state & DECODE_STATE_RUNNING)) {
++	vis_check();
+ 
++	// Shortcut if audio isn't running
++	if( !vis_get_playing()) {
+ 		lua_newtable( L);
+ 		for( i = 0; i < num_bars[0]; i++) {
+ 			lua_pushinteger( L, 0);
+@@ -342,7 +362,7 @@ int decode_spectrum( lua_State *L) {
+ 	}
+ 
+ 	// Init avg_power
+-	for( i = 0; i < (2 * MAX_SUBBANDS); i++) {
++	for( i = 0; i < (2 * num_subbands); i++) {
+ 		avg_power[i] = 0;
+ 	}
+ 
+@@ -353,31 +373,12 @@ int decode_spectrum( lua_State *L) {
+ 		int avg_ptr;
+ 		int s;
+ 
+-		sample_t *ptr;
++		int16_t *ptr;
+ 		size_t samples_until_wrap;
+ 
+ 		int sample;
+ 
+-		decode_audio_lock();
+-
+-		ptr = (sample_t *) (void *) ( decode_fifo_buf + decode_audio->fifo.rptr);
+-		samples_until_wrap = BYTES_TO_SAMPLES( fifo_bytes_until_rptr_wrap( &decode_audio->fifo));
+-
+-		for( i = 0; i < sample_window; i++) {
+-			sample = (*ptr++) >> 16;
+-			fin_buf[i].r = (float) ( filter_window[i] * sample);
+-
+-			sample = (*ptr++) >> 16;
+-			fin_buf[i].i = (float) ( filter_window[i] * sample);
+-
+-			samples_until_wrap -= 2;
+-			if( samples_until_wrap <= 0) {
+-				ptr = (sample_t *) (void *) decode_fifo_buf;
+-			}
+-		}
+-
+-		decode_audio_unlock();
+-
++		int offs;
+ #if 0
+ // Test case
+ 		{
+@@ -390,6 +391,30 @@ int decode_spectrum( lua_State *L) {
+ 				fin_buf[i].i = ( ampl * (float) sin( i * freq)) + ( ampl * (float) cos( i * freq));
+ 			}
+ 		}
++#else
++		vis_lock();
++
++		offs = vis_get_buffer_idx() - (sample_window * 2) - (sample_window * 2 * w);
++		while (offs < 0) offs += vis_get_buffer_len();
++
++		ptr = vis_get_buffer() + offs;
++		samples_until_wrap = vis_get_buffer_len() - offs;
++
++		for( i = 0; i < sample_window; i++) {
++			sample = (*ptr++) >> 7;
++			fin_buf[i].r = (float) (filter_window[i] * sample);
++
++			sample = (*ptr++) >> 7;
++			fin_buf[i].i = (float) (filter_window[i] * sample);
++
++			samples_until_wrap -=2;
++			if( samples_until_wrap <= 0) {
++				ptr = vis_get_buffer();
++				samples_until_wrap = vis_get_buffer_len();
++			}
++		}
++
++		vis_unlock();
+ #endif
+ 
+ 		kiss_fft( cfg, fin_buf, fout_buf);
+@@ -397,23 +422,30 @@ int decode_spectrum( lua_State *L) {
+ 		// Extract the two separate frequency domain signals
+ 		// and keep track of the power per bin.
+ 		avg_ptr = 0;
+-		for( s = 1; s <= num_subbands; s++) {
++		for( s = 0; s < num_subbands; s++) {
+ 			kiss_fft_cpx ck, cnk;
+ 
+-			float r, i;
++			float r = 0, i = 0;
++			int x;
+ 
+-			ck = fout_buf[s];
+-			cnk = fout_buf[sample_window - s];
++			for( x = decade_idx[s]; x < decade_idx[s] + decade_len[s]; x ++) {
++				ck = fout_buf[x];
++				cnk = fout_buf[sample_window - x];
+ 
+-			r = ( ck.r + cnk.r) / 2;
+-			i = ( ck.i - cnk.i) / 2;
++				r = ( ck.r + cnk.r) / 2;
++				i = ( ck.i - cnk.i) / 2;
+ 
+-			avg_power[avg_ptr++] += ( r * r + i * i) / num_windows;
++				avg_power[avg_ptr] += ( r * r + i * i) / num_windows;
+ 
+-			r = ( cnk.i + ck.i) / 2;
+-			i = ( cnk.r - ck.r) / 2;
++				r = ( cnk.i + ck.i) / 2;
++				i = ( cnk.r - ck.r) / 2;
++
++				avg_power[avg_ptr+1] += ( r * r + i * i) / num_windows;
++			}
++			avg_power[avg_ptr] /= decade_len[s];
++			avg_power[avg_ptr+1] /= decade_len[s];
+ 
+-			avg_power[avg_ptr++] += ( r * r + i * i) / num_windows;
++			avg_ptr += 2;
+ 		}
+ 	}
+ 
+@@ -462,6 +494,10 @@ int decode_spectrum( lua_State *L) {
+ 					power_sum >>= 2;
+ 				}
+ 
++#if 0
++				val = log(power_sum << 8) * 1.5;
++				if (val > 31) val = 31;
++#else
+ 				power_sum <<= 6; // FIXME scaling
+ 
+ 				val = 0;
+@@ -471,7 +507,7 @@ int decode_spectrum( lua_State *L) {
+ 						break;
+ 					}
+ 				}
+-
++#endif
+ 				if( ch == 0) {
+ 					sample_bin_ch0[curr_bar++] = val;
+ 				}
+diff --git a/src/audio/decode/visualizer_vumeter.c b/src/audio/decode/visualizer_vumeter.c
+index 88cf734b1..030ddebee 100644
+--- a/src/audio/decode/visualizer_vumeter.c
++++ b/src/audio/decode/visualizer_vumeter.c
+@@ -6,51 +6,54 @@
+ 
+ #include "common.h"
+ 
+-#include "audio/mqueue.h"
+-#include "audio/fifo.h"
+-#include "audio/streambuf.h"
+-#include "audio/decode/decode.h"
+-#include "audio/decode/decode_priv.h"
++#include "visualizer.h"
+ 
+-
+-#define VUMETER_DEFAULT_SAMPLE_WINDOW 8 * 1024
++#define VUMETER_DEFAULT_SAMPLE_WINDOW 1024 * 2
+ 
+ int decode_vumeter(lua_State *L) {
+-	u32_t sample_accumulator[2];
+-	sample_t *ptr;
+-	size_t samples_until_wrap;
++	long long sample_accumulator[2];
++	int16_t *ptr;
+ 	s16_t sample;
+ 	s32_t sample_sq;
+-	size_t i, num_samples;
++	size_t i, num_samples, samples_until_wrap;
++
++	int offs;
+ 
+ 	num_samples = luaL_optinteger(L, 2, VUMETER_DEFAULT_SAMPLE_WINDOW);
+ 
+ 	sample_accumulator[0] = 0;
+ 	sample_accumulator[1] = 0;
+ 
+-	decode_audio_lock();
++	vis_check();
++
++	if (vis_get_playing()) {
++
++		vis_lock();
+ 
+-	if (decode_audio->state & DECODE_STATE_RUNNING) {
+-		ptr = (sample_t *)(void *)(decode_fifo_buf + decode_audio->fifo.rptr);
+-		samples_until_wrap = BYTES_TO_SAMPLES(fifo_bytes_until_rptr_wrap(&decode_audio->fifo));
++		offs = vis_get_buffer_idx() - (num_samples * 2);
++		while (offs < 0) offs += vis_get_buffer_len();
++
++		ptr = vis_get_buffer() + offs;
++		samples_until_wrap = vis_get_buffer_len() - offs;
+ 
+ 		for (i=0; i<num_samples; i++) {
+-			sample = (*ptr++) >> 24;
++			sample = (*ptr++) >> 8;
+ 			sample_sq = sample * sample;
+ 			sample_accumulator[0] += sample_sq;
+ 
+-			sample = (*ptr++) >> 24;
++			sample = (*ptr++) >> 8;
+ 			sample_sq = sample * sample;
+ 			sample_accumulator[1] += sample_sq;
+ 
+ 			samples_until_wrap -= 2;
+ 			if (samples_until_wrap <= 0) {
+-				ptr = (sample_t *)(void *)decode_fifo_buf;
++				ptr = vis_get_buffer();
++				samples_until_wrap = vis_get_buffer_len();
+ 			}
+ 		}
+-	}
+ 
+-	decode_audio_unlock();
++		vis_unlock();
++	}
+ 
+ 	sample_accumulator[0] /= num_samples;
+ 	sample_accumulator[1] /= num_samples;
