@@ -1,0 +1,15 @@
+diff --git a/faad.c b/faad.c
+index b08c201..ed5c006 100644
+--- a/faad.c
++++ b/faad.c
+@@ -566,9 +566,7 @@ static void faad_open(u8_t size, u8_t rate, u8_t chan, u8_t endianness) {
+ 	conf->outputFormat = FAAD_FMT_24BIT;
+ 	conf->downMatrix = 1;
+ 
+-	if (!NEAAC(a, SetConfiguration, a->hAac, conf)) {
+-		LOG_WARN("error setting config");
+-	};
++	NEAAC(a, SetConfiguration, a->hAac, conf);
+ }
+ 
+ static void faad_close(void) {

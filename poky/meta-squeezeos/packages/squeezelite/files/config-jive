@@ -1,0 +1,7 @@
+# AUDIO_DEV=""
+ALSA_PARAMS="-a 80:4:16:"
+MAX_RATE="-r 48000"
+LOG_FILE="-f /var/log/squeezelite"
+#LOG_LEVEL="-d all=debug"
+OPTIONS="-N /etc/squeezelite/name -P /var/run/squeezelite.pid -z"
+#UPSAMPLE="-u E"

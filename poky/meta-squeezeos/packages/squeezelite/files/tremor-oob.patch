@@ -1,0 +1,22 @@
+--- squeezelite-2.0.0-r1504/squeezelite.h.orig	2024-11-15 15:33:55.000000000 -0500
++++ squeezelite-2.0.0-r1504/squeezelite.h	2024-11-18 11:27:54.763784642 -0500
+@@ -205,7 +205,7 @@
+ #define LIBVORBIS "libvorbisfile.so.3"
+ #define LIBOGG "libogg.so.0"
+ #define LIBOPUS "libopusfile.so.0"
+-#define LIBTREMOR "libvorbisidec.so.1"
++#define LIBTREMOR "libvorbisidec2.so.2"
+ #define LIBFAAD "libfaad.so.2"
+ #define LIBAVUTIL   "libavutil.so.%d"
+ #define LIBAVCODEC  "libavcodec.so.%d"
+--- squeezelite-2.0.0-r1504/vorbis.c.orig	2024-11-27 14:31:23.784740244 -0500
++++ squeezelite-2.0.0-r1504/vorbis.c	2024-11-29 14:43:08.599784493 -0500
+@@ -47,7 +47,7 @@
+ #define OV_EXCLUDE_STATIC_CALLBACKS
+ 
+ #ifdef TREMOR_ONLY
+-#include <tremor/ivorbisfile.h>
++#include <tremor2/ivorbisfile.h>
+ #else
+ #include <vorbis/vorbisfile.h>
+ #endif

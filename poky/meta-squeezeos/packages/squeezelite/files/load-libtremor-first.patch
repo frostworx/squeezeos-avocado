@@ -1,0 +1,33 @@
+--- a/vorbis.c	2024-11-11 14:02:41.148744271 -0500
++++ b/vorbis.c	2024-11-11 14:06:31.240772157 -0500
+@@ -325,15 +325,15 @@
+ 
+ static bool load_vorbis() {
+ #if !LINKALL
+-	void *handle = dlopen(LIBVORBIS, RTLD_NOW);
++	void *handle = dlopen(LIBTREMOR, RTLD_NOW);
+ 	char *err;
+-	bool tremor = false;
++	bool tremor = true;
+ 
+ 	if (!handle) {
+ 		err = dlerror();
+-		handle = dlopen(LIBTREMOR, RTLD_NOW);
++		handle = dlopen(LIBVORBIS, RTLD_NOW);
+ 		if (handle) {
+-			tremor = true;
++			tremor = false;
+ 		} else {
+ 			LOG_INFO("dlerror: %s", err);
+ 			LOG_INFO("dlerror: %s", dlerror());
+--- a/vorbis.c	2024-11-11 15:31:42.964740520 -0500
++++ b/vorbis.c	2024-11-11 15:43:24.320778557 -0500
+@@ -204,7 +204,7 @@
+ 
+ 	// write the decoded frames into outputbuf even though they are 16 bits per sample, then unpack them
+ #ifdef TREMOR_ONLY	
+-	n = OV(v, read, v->vf, (char *)write_buf, bytes, &s);
++	n = OV(v, read_tremor, v->vf, (char *)write_buf, bytes, &s);
+ #else
+ 	if (!TREMOR(v)) {
+ #if SL_LITTLE_ENDIAN
