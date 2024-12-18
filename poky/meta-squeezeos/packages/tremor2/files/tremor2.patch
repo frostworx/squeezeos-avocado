@@ -1,0 +1,102 @@
+--- tremor-20240614/Makefile.am.orig	2024-06-14 11:49:58.000000000 -0400
++++ tremor-20240614/Makefile.am	2024-11-29 14:19:23.866049938 -0500
+@@ -3,11 +3,11 @@
+ INCLUDES = -I./ @OGG_CFLAGS@
+ 
+ pkgconfigdir = $(libdir)/pkgconfig
+-pkgconfig_DATA = vorbisidec.pc
++pkgconfig_DATA = vorbisidec2.pc
+ 
+-lib_LTLIBRARIES = libvorbisidec.la
++lib_LTLIBRARIES = libvorbisidec2.la
+ 
+-libvorbisidec_la_SOURCES = mdct.c block.c window.c \
++libvorbisidec2_la_SOURCES = mdct.c block.c window.c \
+                         synthesis.c info.c \
+                         floor1.c floor0.c vorbisfile.c \
+                         res012.c mapping0.c registry.c codebook.c \
+@@ -17,25 +17,25 @@
+                         registry.h window.h window_lookup.h\
+                         codec_internal.h backends.h \
+ 			asm_arm.h ivorbiscodec.h
+-libvorbisidec_la_LDFLAGS = -version-info @V_LIB_CURRENT@:@V_LIB_REVISION@:@V_LIB_AGE@
+-libvorbisidec_la_LIBADD = @OGG_LIBS@
++libvorbisidec2_la_LDFLAGS = -version-info @V_LIB_CURRENT@:@V_LIB_REVISION@:@V_LIB_AGE@
++libvorbisidec2_la_LIBADD = @OGG_LIBS@
+ 
+ EXTRA_PROGRAMS = ivorbisfile_example iseeking_example
+ CLEANFILES = $(EXTRA_PROGRAMS) $(lib_LTLIBRARIES)
+ 
+ ivorbisfile_example_SOURCES = ivorbisfile_example.c
+ ivorbisfile_example_LDFLAGS = -static 
+-ivorbisfile_example_LDADD = libvorbisidec.la @OGG_LIBS@
++ivorbisfile_example_LDADD = libvorbisidec2.la @OGG_LIBS@
+ 
+ iseeking_example_SOURCES = iseeking_example.c
+ iseeking_example_LDFLAGS = -static 
+-iseeking_example_LDADD = libvorbisidec.la @OGG_LIBS@
++iseeking_example_LDADD = libvorbisidec2.la @OGG_LIBS@
+ 
+-includedir = $(prefix)/include/tremor
++includedir = $(prefix)/include/tremor2
+ 
+ include_HEADERS = ivorbiscodec.h ivorbisfile.h config_types.h
+ 
+-EXTRA_DIST = vorbisidec.pc.in \
++EXTRA_DIST = vorbisidec2.pc.in \
+         $(srcdir)/doc/*.html $(srcdir)/win32/VS*/libtremor/*.vcproj
+ 
+ example:
+--- tremor-20240614/configure.in.orig	2024-06-14 11:49:58.000000000 -0400
++++ tremor-20240614/configure.in	2024-11-29 14:22:08.729988855 -0500
+@@ -11,14 +11,14 @@
+ 
+ AM_CONFIG_HEADER([config.h])
+ 
+-AM_INIT_AUTOMAKE(libvorbisidec,1.2.1)
++AM_INIT_AUTOMAKE(libvorbisidec2,2.2.1)
+ 
+ dnl AM_MAINTAINER_MODE only provides the option to configure to enable it
+ AM_MAINTAINER_MODE
+ 
+ dnl Library versioning
+ 
+-V_LIB_CURRENT=1
++V_LIB_CURRENT=2
+ V_LIB_REVISION=3
+ V_LIB_AGE=0
+ AC_SUBST(V_LIB_CURRENT)
+@@ -143,4 +143,4 @@
+ AC_SUBST(DEBUG)
+ AC_SUBST(PROFILE)
+ 
+-AC_OUTPUT(Makefile Version_script vorbisidec.pc)
++AC_OUTPUT(Makefile Version_script vorbisidec2.pc)
+--- tremor-20240614/Version_script.in.orig	2024-06-14 11:49:58.000000000 -0400
++++ tremor-20240614/Version_script.in	2024-11-29 14:09:19.967599707 -0500
+@@ -5,7 +5,7 @@
+ # applications linking to libvorbisidec.
+ #
+ 
+-@PACKAGE@.so.1
++@PACKAGE@.so.2
+ {
+ 	global:
+ 		ov_clear;
+--- tremor-20240614/vorbisidec2.pc.in.orig	2024-11-29 14:19:55.259657464 -0500
++++ tremor-20240614/vorbisidec2.pc.in	2024-11-29 14:15:06.810263577 -0500
+@@ -0,0 +1,14 @@
++# libvorbisidec pkg-config source file
++
++prefix=@prefix@
++exec_prefix=@exec_prefix@
++libdir=@libdir@
++includedir=@includedir@
++
++Name: vorbisidec
++Description: vorbisidec is the integer Ogg Vorbis library
++Version: @VERSION@
++Requires.private: ogg
++Conflicts:
++Libs: -L${libdir} -lvorbisidec2
++Cflags: -I${includedir}
