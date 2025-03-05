@@ -1,6 +1,11 @@
 #!/bin/sh
+IFNAME=eth0
 
 # replace all " \t" in the ssid.
 # FIXME ssid's with \n are not supported.
-SSID=`/usr/sbin/wpa_cli -ieth0 status | grep ^ssid= | cut -f2- -d= | tr ' \t' _`
+if [ -S "/var/run/wpa_supplicant/$IFNAME" ]; then 
+    SSID=`/usr/sbin/wpa_cli -i$IFNAME status | grep ^ssid= | cut -f2- -d= | tr ' \t' _`
+else
+    /usr/bin/logger "if_mapping $IFNAME not found"
+fi
 echo $SSID
