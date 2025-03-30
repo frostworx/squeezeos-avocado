@@ -28,6 +28,7 @@ SRC_URI="${RALPHY_SQUEEZEOS}/atheros-ar6ksdk.build_sw.${DV}.tar.gz \
 	 file://0010-driver-debug-hdr-ptr.patch;patch=1 \
 	 file://0011-driver-debug-stop-endpoint.patch;patch=1 \
 	 file://0012-log-wmi-set-BSS-filter-command.patch;patch=1 \
+	 file://0013-Log-Truncated-beacons-Implicated-in-WiFi-issues.patch;patch=1 \
 	\
 	 file://bmiloader \
 	 file://wmiconfig \

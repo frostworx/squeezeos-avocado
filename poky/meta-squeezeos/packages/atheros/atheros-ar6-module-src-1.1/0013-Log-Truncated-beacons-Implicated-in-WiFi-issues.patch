@@ -1,0 +1,103 @@
+From ad6690dcc37479ebf2e21e8fd056d279541b1b6c Mon Sep 17 00:00:00 2001
+From: Martin Williams <martinr.williams@gmail.com>
+Date: Thu, 27 Mar 2025 13:27:49 +0000
+Subject: [PATCH] Log Truncated beacons - Implicated in WiFi issues
+
+This change adds a log trace to track the reception of apparently truncated
+WiFi Beacons and Probe Responses.
+
+This is a follow up to issue #25:
+"Squeezebox Radio - Some notes on WiFi stability problems"
+
+I have noted that WiFi Beacons and Probe Responses are being truncated to 496
+octets in length, probably by the Atheros firmware. Together with a 16 octet
+packet header this equates to a packet size of 512 octets.
+
+The process of truncation is, somehow, triggering the Radio's WiFi
+misbehaviour.
+
+By tracing these occurrences, we may gain some insight into:
+
+- How many of these are being received in any given environment.
+- How many will result in WiFi misbehaviour.
+- Whether time of receipt is relevant to occurrence of misbehaviour.
+---
+ AR6kSDK.build_sw.83/host/wmi/wmi.c | 55 ++++++++++++++++++++++++++++++
+ 1 file changed, 55 insertions(+)
+
+diff --git AR6kSDK.build_sw.83/host/wmi/wmi.c AR6kSDK.build_sw.83/host/wmi/wmi.c
+index 6f7cef4..02e0eee 100644
+--- AR6kSDK.build_sw.83/host/wmi/wmi.c
++++ AR6kSDK.build_sw.83/host/wmi/wmi.c
+@@ -1217,6 +1217,56 @@ wmi_tkip_micerr_event_rx(struct wmi_t *wmip, A_UINT8 *datap, int len)
+     return A_OK;
+ }
+ 
++static A_STATUS
++log_truncated_bss(A_UINT8 *datap, int len)
++{
++    WMI_BSS_INFO_HDR *bih;
++    A_UINT8 *buf;
++    A_UINT8 ssid_len = 0;
++    A_UCHAR ssid[32+1]; /* Max size of SSID 32 plus terminating null */
++    A_CHAR  *frameTypeDesc;
++    A_UINT32 inx;
++
++    A_MEMZERO(ssid, sizeof(ssid));
++
++    /* we are called with len >= 512, so no need to check for small len */
++
++    bih = (WMI_BSS_INFO_HDR *)datap;
++    buf = datap + sizeof(WMI_BSS_INFO_HDR);
++
++    ssid_len = buf[SSID_IE_LEN_INDEX]; /* octet specifying length of SSID ie */
++    if (ssid_len > sizeof(ssid) - 1) { /* should never happen... */
++        ssid_len = sizeof(ssid) - 1;
++    }
++    A_MEMCPY(ssid, &buf[SSID_IE_LEN_INDEX + 1], ssid_len);
++    /* replace all non-printing ASCII and "extended ASCII" by '?' */
++    for (inx = 0; inx < ssid_len; inx++) {
++        if (ssid[inx] < 32 || ssid[inx] > 126) {
++            ssid[inx] = '?';
++        }
++    }
++    ssid[ssid_len] = '\0';
++
++    switch (bih->frameType) {
++      case BEACON_FTYPE:
++        frameTypeDesc = "Beacon"; break;
++      case PROBERESP_FTYPE:
++        frameTypeDesc = "Probe response"; break;
++      case ACTION_MGMT_FTYPE:
++        frameTypeDesc = "Action"; break;
++      case PROBEREQ_FTYPE:
++        frameTypeDesc = "Probe request"; break;
++      default:
++        frameTypeDesc = "Unknown";
++    }
++
++    /* len - sizeof(WMI_BSS_INFO_HDR) is the size of the Management Frame data */
++    A_PRINTF("AR6000 Truncated Management frame ? Type=%s BSSID=%02x:%02x:%02x:%02x:%02x:%02x SSID=\"%s\" Length=%d\n",
++      frameTypeDesc,
++      bih->bssid[0], bih->bssid[1], bih->bssid[2], bih->bssid[3], bih->bssid[4], bih->bssid[5],
++      ssid, len - sizeof(WMI_BSS_INFO_HDR));
++}
++
+ static A_STATUS
+ wmi_bssInfo_event_rx(struct wmi_t *wmip, A_UINT8 *datap, int len)
+ {
+@@ -1232,6 +1282,11 @@ wmi_bssInfo_event_rx(struct wmi_t *wmip, A_UINT8 *datap, int len)
+         return A_EINVAL;
+     }
+ 
++    /* len > 512 has not been seen to date, len = 512 suggests probable truncation */
++    if (len >= 512) {
++        log_truncated_bss(datap, len);
++    }
++
+     bih = (WMI_BSS_INFO_HDR *)datap;
+     bss = wlan_find_node(&wmip->wmi_scan_table, bih->bssid);
+ 
+-- 
+2.48.0
+
