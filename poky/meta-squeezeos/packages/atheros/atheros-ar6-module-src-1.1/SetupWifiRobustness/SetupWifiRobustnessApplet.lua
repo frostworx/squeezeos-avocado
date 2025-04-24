@@ -103,7 +103,28 @@ function settingsShow(self, menuItem)
 				})
 
 	window:addWidget(menu)
-	
+
+
+	-- Displays the number of truncated beacons logged.
+	menu:addItem ({
+		text     = self:string("TRUNCATED_BCN_TITLE"),
+		sound    = "WINDOWSHOW",
+		callback = function (event, menuItem)
+			local window = Window("text_list", self:string("TRUNCATED_BCN_TITLE"))
+			window:setAllowScreensaver(false)
+			local grepRes = io.popen("/bin/grep -ci \'AR6000\\s\\+Truncated\' /var/log/messages")
+			local truncation_cnt = grepRes:read("*line")
+			grepRes:close()
+			if not truncation_cnt then
+				truncation_cnt = "<Read error>"
+			end
+			local text   = Textarea('help_text', self:string("TRUNCATED_BCN_TEXT", tostring(truncation_cnt)))
+			window:addWidget(text)
+			self:tieAndShowWindow(window)
+		end
+	})
+
+
 	window:addListener(EVENT_WINDOW_INACTIVE, 
 		function()
 			if settingsChanged then
