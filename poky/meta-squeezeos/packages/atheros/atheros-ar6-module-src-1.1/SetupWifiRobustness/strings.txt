@@ -22,3 +22,15 @@ FILTERALL_ENABLE
 
 FILTERALL_HOWTO
 	EN	Enabling all BSS filters restores this default option set in the original firmware
+
+TRUNCATED_BCN_TITLE
+	EN	Truncated beacon count
+
+TRUNCATED_BCN_TEXT
+	EN	There are %s occurrences of 'truncated' WiFi beacons noted in the system log.\n\nThese are known to cause WiFi problems, although a handful seems to be tolerable.
+
+MAXPERF_ENABLE
+	EN	Enable 'Power Maxperf'
+
+MAXPERF_HOWTO
+	EN	Setting 'Power Maxperf' restores this default option set in the original firmware. It may trigger WiFi issues, so set this only if investigating WiFi behaviour.

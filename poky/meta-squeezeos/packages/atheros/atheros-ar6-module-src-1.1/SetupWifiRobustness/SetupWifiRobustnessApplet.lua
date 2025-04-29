@@ -31,6 +31,7 @@ function settingsShow(self, menuItem)
 	local gonlyEnabled = _fileMatch("/etc/wlan.conf", "^gonly=on")
 	local arpwatchEnabled = _fileMatch("/etc/wlan.conf", "^arpwatch=on")
 	local filterallEnabled = _fileMatch("/etc/wlan.conf", "^filterall=on")
+	local maxperfEnabled = _fileMatch("/etc/wlan.conf", "^maxperf=on")
 
 	local window = Window("help_list", menuItem.text, 'settingstitle')
 	local menu = SimpleMenu("menu", {
@@ -103,7 +104,62 @@ function settingsShow(self, menuItem)
 				})
 
 	window:addWidget(menu)
-	
+
+
+	-- Displays the number of truncated beacons logged.
+	menu:addItem ({
+		text     = self:string("TRUNCATED_BCN_TITLE"),
+		sound    = "WINDOWSHOW",
+		callback = function (event, menuItem)
+			local window = Window("text_list", self:string("TRUNCATED_BCN_TITLE"))
+			window:setAllowScreensaver(false)
+			local grepRes = io.popen("/bin/grep -ci \'AR6000\\s\\+Truncated\' /var/log/messages")
+			local truncation_cnt = grepRes:read("*line")
+			grepRes:close()
+			if not truncation_cnt then
+				truncation_cnt = "<Read error>"
+			end
+			local text   = Textarea('help_text', self:string("TRUNCATED_BCN_TEXT", tostring(truncation_cnt)))
+			window:addWidget(text)
+			self:tieAndShowWindow(window)
+		end
+	})
+
+	-- Enable setting 'wmiconfig -eth1 --power maxperf'
+	menu:addItem ({
+		text     = self:string("MAXPERF_ENABLE"),
+		sound    = "WINDOWSHOW",
+		callback = function (event, menuItem)
+			local window = Window("text_list", self:string("MAXPERF_ENABLE"))
+			window:setAllowScreensaver(false)
+			local menu =  SimpleMenu("menu")
+			menu:setHeaderWidget(Textarea("help_text", self:string("MAXPERF_HOWTO")))
+			local checkb = Checkbox("checkbox",
+					function(_, isSelected)
+						settingsChanged = true
+						if isSelected then
+							log:warn("wlan.conf setting maxperf=on")
+							_fileSub("/etc/wlan.conf", "^maxperf=.*$", "maxperf=on")
+							maxperfEnabled = true
+						else
+							log:warn("wlan.conf setting maxperf=off")
+							_fileSub("/etc/wlan.conf", "^maxperf=.*$", "maxperf=off")
+							maxperfEnabled = false
+						end
+					end,
+					maxperfEnabled
+				)
+			menu:addItem({
+				text  = self:string("MAXPERF_ENABLE"),
+				style = 'item_choice',
+				check = checkb,
+			})
+			window:addWidget(menu)
+			self:tieAndShowWindow(window)
+		end
+	})
+
+
 	window:addListener(EVENT_WINDOW_INACTIVE, 
 		function()
 			if settingsChanged then
