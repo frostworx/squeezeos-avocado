@@ -2,7 +2,7 @@ DESCRIPTION = "Atheros AR63 sdio wlan driver"
 SECTION = "base"
 LICENSE = "binary only"
 
-PR = "r4"
+PR = "r5"
 
 PROVIDES = "atheros-ar63-module"
 
@@ -21,7 +21,6 @@ SRC_URI=" \
 	 file://loadAR6000l.sh \
 	 file://restart-wifi.sh \
 	 file://watch-arp.sh \
-	 file://wlan \
 "
 
 inherit module-base
@@ -50,13 +49,10 @@ do_install() {
 	install -m 0755 ${WORKDIR}/loadAR6000l.sh ${INSTALL_DIR}/loadAR6000l.sh
         install -m 0755 ${WORKDIR}/watch-arp.sh ${INSTALL_DIR}/watch-arp.sh
         install -m 0755 ${WORKDIR}/restart-wifi.sh ${INSTALL_DIR}/restart-wifi.sh
-
-	install -m 0755 -d ${D}${sysconfdir}/init.d
-	install -m 0755 ${WORKDIR}/wlan ${D}${sysconfdir}/init.d/wlan
 }
 
 
 PACKAGES = "atheros-ar63-module-dbg atheros-ar63-module"
 
-FILES_atheros-ar63-module = "${base_libdir}/modules/${KERNEL_VERSION} ${base_libdir}/atheros3 ${sysconfdir}"
+FILES_atheros-ar63-module = "${base_libdir}/modules/${KERNEL_VERSION} ${base_libdir}/atheros3"
 FILES_atheros-ar63-module-dbg = "${base_libdir}/modules/${KERNEL_VERSION}/.debug ${base_libdir}/atheros3/.debug"
