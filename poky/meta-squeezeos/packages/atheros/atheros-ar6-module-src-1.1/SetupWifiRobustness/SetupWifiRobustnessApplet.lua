@@ -125,7 +125,7 @@ function settingsShow(self, menuItem)
 		end
 	})
 
-	-- Enable setting 'wmiconfig -eth1 --power maxperf'
+	-- Enable setting 'wmiconfig -i eth1 --power maxperf'
 	menu:addItem ({
 		text     = self:string("MAXPERF_ENABLE"),
 		sound    = "WINDOWSHOW",
@@ -159,8 +159,8 @@ function settingsShow(self, menuItem)
 		end
 	})
 
-
-	window:addListener(EVENT_WINDOW_INACTIVE, 
+	-- Restart the WiFi when the menu is exited
+	window:addListener(EVENT_WINDOW_POP,
 		function()
 			if settingsChanged then
 				os.execute("/lib/atheros/restart-wifi.sh &")
@@ -175,6 +175,7 @@ function settingsShow(self, menuItem)
 	self:tieAndShowWindow(window)
 	return window
 end
+
 function _addHelpInfo(self)
 	self.howto = Textarea("help_text", self:string("GONLY_HOWTO"))
 	self.menu:setHeaderWidget(self.howto)
@@ -202,24 +203,29 @@ function _fileMatch(file, pattern)
 end
 
 function _fileSub(file, pattern, repl)
-        local data = ""
-        local match = false
+	local data = ""
+	local match = false
 
-        local fi = io.open(file, "r")
-        for line in fi:lines() do
-        	if string.match(line, pattern) then
-        		match = true
-                	line = string.gsub(line, pattern, repl)
-                end
-                data = data .. line .. "\n"
-        end
-        -- if we haven't found a match to replace, add to end of file
-        if match == false then
-        	data = data .. repl .. "\n"
-        end
-        fi:close()
-
-        System:atomicWrite(file, data)
+	local fi, errmsg = io.open(file, "r")
+	if fi ~= nil then
+		for line in fi:lines() do
+			if string.match(line, pattern) then
+				match = true
+				line = string.gsub(line, pattern, repl)
+			end
+			data = data .. line .. "\n"
+		end
+		fi:close()
+	else
+		-- user deleted file ?
+		-- we will create one anyway, with the current setting
+		log:warn("Error reading ", file, " : ", errmsg)
+	end
+	-- if we haven't found a match to replace, add to end of file
+	if match == false then
+		data = data .. repl .. "\n"
+	end
+	System:atomicWrite(file, data)
 end
 
 --[[
