@@ -44,11 +44,11 @@ case "$1" in
 
 	# act on settings from /etc/wlan.conf
 	if [ "${filterall}" == "on" ]; then
-		${WORKAREA}/wmiconfig -eth1 --filter=all
+		${WORKAREA}/wmiconfig -i eth1 --filter=all
 	fi
 
 	if [ "${gonly}" == "on" ]; then
-		${WORKAREA}/wmiconfig --wmode gonly
+		${WORKAREA}/wmiconfig -i eth1 --wmode gonly
 	fi
 
 	if [ "${arpwatch}" == "on" ]; then
@@ -56,7 +56,7 @@ case "$1" in
 	fi
 
 	if [ "${maxperf}" == "on" ]; then
-		${WORKAREA}/wmiconfig -eth1 --power maxperf
+		${WORKAREA}/wmiconfig -i eth1 --power maxperf
 	fi
 
 	# todo region codes?
