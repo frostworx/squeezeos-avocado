@@ -1,0 +1,3 @@
+[submodule "squeezeos-avocado-poky-src-mirror"]
+	path = squeezeos-avocado-poky-src-mirror
+	url = https://github.com/frostworx/squeezeos-avocado-poky-src-mirror
