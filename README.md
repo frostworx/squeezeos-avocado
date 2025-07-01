@@ -13,8 +13,10 @@ Custom squeezeos fork with multiple cleanups, which allows to build squeezebox f
    - don't have a valid home
 
 Ideally those files are hosted by a squeezeos community (maybe lyrion.org?)
-For now there is no public url hosting those files (I might add a separate git project for the beginning later),
-so defaults to my local http://192.168.2.4:8730/poky-cache
+For now there is no public url hosting those files
+so it defaults to the locally hosted url http://127.0.0.1:8730/poky-cache
+which you could quickly launch in a separate docker container using this
+side repo: https://github.com/frostworx/squeezeos-avocado-poky-src-mirror
 
 ### docker support
 Yes, finally the squeezeos firmware can be built completely in a docker container.

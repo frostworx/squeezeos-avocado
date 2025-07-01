@@ -7,7 +7,7 @@ services:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/Berlin
-      - SQUEEZEOS_SRC_MIRROR=http://192.168.2.4:8730/poky-cache
+#      - SQUEEZEOS_SRC_MIRROR=http://127.0.0.1:8730/poky-cache
     volumes:
       - ../poky:/poky
 
