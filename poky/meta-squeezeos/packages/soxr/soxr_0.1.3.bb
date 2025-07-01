@@ -7,7 +7,7 @@ PR=r1
 inherit cmake
 
 SRC_URI = " \
-    http://ralph.irving.sdf.org/squeezeos/${PN}-${PV}-Source.tar.gz \
+    ${SQUEEZEOS_SRC_MIRROR}/${PN}-${PV}-Source.tar.gz \
     file://fix-cmake-set-project-version.patch;patch=1 \
 "
 

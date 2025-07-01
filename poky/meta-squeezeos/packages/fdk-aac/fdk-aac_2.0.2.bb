@@ -4,7 +4,7 @@ LICENSE = "Apache 2.0"
 
 PR="r1"
 
-SRC_URI = "${RALPHY_SQUEEZEOS}/${PN}-${PV}-801f67f.tar.gz"
+SRC_URI = "${SQUEEZEOS_SRC_MIRROR}/${PN}-${PV}-801f67f.tar.gz"
 
 S="${WORKDIR}/${PN}-${PV}"
 

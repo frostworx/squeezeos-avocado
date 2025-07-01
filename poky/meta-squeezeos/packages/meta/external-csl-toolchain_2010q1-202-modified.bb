@@ -20,7 +20,7 @@ require external-csl-toolchain_2010q1-202.bb
 # Override SRC_URI, because the base package incorporates a parameterized
 # version number ${PV}, which no longer matches up.
 
-SRC_URI = "https://sourcery.sw.siemens.com/public/gnu_toolchain/arm-none-linux-gnueabi/arm-2010q1-202-arm-none-linux-gnueabi-i686-pc-linux-gnu.tar.bz2 \
+SRC_URI = "ENTER_SRC_MIRROR/arm-2010q1-202-arm-none-linux-gnueabi-i686-pc-linux-gnu.tar.bz2 \
         file://SUPPORTED"
 
 

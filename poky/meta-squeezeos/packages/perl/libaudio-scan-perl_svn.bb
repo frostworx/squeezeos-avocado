@@ -10,7 +10,7 @@ FULL_OPTIMIZATION = "-fexpensive-optimizations -fomit-frame-pointer -frename-reg
 ARM_INSTRUCTION_SET = "arm"
 
 # This should match the version currently listed in SBS's modules.conf file
-SRC_URI = "http://ralph.irving.sdf.org/squeezeos/Audio-Scan-${PV}.tar.gz"
+SRC_URI = "${SQUEEZEOS_SRC_MIRROR}/Audio-Scan-${PV}.tar.gz"
 
 S = "${WORKDIR}/Audio-Scan-${PV}"
 

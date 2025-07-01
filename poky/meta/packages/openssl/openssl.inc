@@ -4,7 +4,7 @@ LICENSE = "openssl"
 SECTION = "libs/network"
 
 SRC_URI = "https://www.openssl.org/source/openssl-${PV}.tar.gz \
-	${RALPHY_SQUEEZEOS}/openssl-${PV}-perlpath.tar.gz"
+	${SQUEEZEOS_SRC_MIRROR}/openssl-${PV}-perlpath.tar.gz"
 
 S = "${WORKDIR}/openssl-${PV}"
 

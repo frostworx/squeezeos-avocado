@@ -10,7 +10,7 @@ PROVIDES = "atheros-ar6-module"
 
 DEPENDS = "virtual/kernel"
 
-SRC_URI="${RALPHY_SQUEEZEOS}/atheros-ar6ksdk.build_sw.${DV}.tar.gz \
+SRC_URI="${SQUEEZEOS_SRC_MIRROR}/atheros-ar6ksdk.build_sw.${DV}.tar.gz \
 	 file://AR6kSDK.build_sw.${DV}.baby.patch;patch=1 \
 	 file://atheros_configpm.patch;patch=1 \
 	 file://atheros_nostatupdate.patch;patch=1 \

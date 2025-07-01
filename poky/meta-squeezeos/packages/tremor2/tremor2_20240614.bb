@@ -7,7 +7,7 @@ SRCDATE = "${PV}"
 PR = "r0"
 
 SRC_URI = " \
-    ${RALPHY_SQUEEZEOS}/tremor-${PV}.tar.gz \
+    ${SQUEEZEOS_SRC_MIRROR}/tremor-${PV}.tar.gz \
     file://tremor2.patch;patch=1 \
 "
 

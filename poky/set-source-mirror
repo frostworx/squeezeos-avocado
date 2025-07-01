@@ -1,0 +1,57 @@
+#!/bin/bash
+SMCONF="${0%%/*}/source-mirror.conf"
+echo "SMCONF $SMCONF"
+
+FIXFILES=("meta/conf/bitbake.conf" \
+"meta-squeezeos/classes/poky.bbclass" \
+"meta/conf/checksums.ini" \
+"meta/packages/opkg/opkg.inc" \
+"meta/packages/opkg-utils/opkg-utils_svn.bb" \
+"meta/packages/pkgconfig/pkgconfig.inc" \
+"meta-squeezeos/packages/meta/external-csl-toolchain_2010q1-202-modified.bb" \
+"meta-squeezeos/packages/meta/external-csl-toolchain_2010q1-202.bb" \
+"meta/packages/wireless-tools/wireless-tools_29.bb"
+)
+
+if [ -z "$SQUEEZEOS_SRC_MIRROR" ]; then
+  if [ -f "$SMCONF" ]; then
+    source "$SMCONF"
+  fi
+fi
+
+
+# uname -m doesn't work as expected in the container, so hardcoding 32bit
+sed "s:BUILD_ARCH=\`uname -m\`:BUILD_ARCH=\"i686\":g" -i scripts/poky-env-internal
+sed "s:BUILD_ARCH = \"\\\${@os.uname()\[4\]}\":BUILD_ARCH = \"i686\":g" -i meta/conf/bitbake.conf
+
+# expand path, because else opkg-build is not found
+export PATH="$PATH:/poky/build/tmp-baby/work/i686-linux/opkg-utils-native-svn-r2/temp-staging/usr/local/bin/"
+
+if [ -n "$SQUEEZEOS_SRC_MIRROR" ]; then
+  if [ -z "$1" ] || [ "$1" == "set" ]; then
+      echo "deploying SQUEEZEOS_SRC_MIRROR '$SQUEEZEOS_SRC_MIRROR'"
+      
+      for i in "${FIXFILES[@]}"; do
+        echo sed "${0%%/*}/$i"
+       sed "s|ENTER_SRC_MIRROR|${SQUEEZEOS_SRC_MIRROR}|g" -i "${0%%/*}/$i"
+      done
+  elif [ "$1" == "reset" ]; then
+    find bitbake -name "*pyc" -exec rm {} \;
+    find build -type d -name "tmp*" -exec echo rm -rf {} \;
+    if [ -f "sources" ]; then
+      rm -rf sources
+    fi
+
+    echo "resetting SQUEEZEOS_SRC_MIRROR '$SQUEEZEOS_SRC_MIRROR' settings"
+    
+    for i in "${FIXFILES[@]}"; do
+      echo sed "${0%%/*}/$i"
+     sed "s|${SQUEEZEOS_SRC_MIRROR}|ENTER_SRC_MIRROR|g" -i "${0%%/*}/$i"
+    done
+  else
+    echo "'$1' invalid argument - either 'set' or 'reset'"
+  fi
+else
+  echo "SQUEEZEOS_SRC_MIRROR is not set - configure '$SMCONF'"
+  exit 1
+fi

@@ -1,0 +1,20 @@
+
+docker-compose build
+chown -R 1000:1000 ../poky
+docker-compose up -d --remove-orphans
+
+# configure `SQUEEZEOS_SRC_MIRROR` in either `docker-compose.yml` or in a renamed `poky/source-mirror.conf-example`
+
+docker exec -it docker-squeezeos-dev-1 bash
+
+cd /poky
+./set-source-mirror
+
+# cp build/conf/local.conf.sample build/conf/local.conf
+
+source poky-init-build-env
+
+touch conf/sanity.conf
+
+export PATH="$PATH:/poky/build/tmp-baby/work/i686-linux/opkg-utils-native-svn-r2/temp-staging/usr/local/bin/"
+bitbake squeezeos-image

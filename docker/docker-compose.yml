@@ -1,0 +1,16 @@
+services:
+  squeezeos-dev:
+    build: .
+    image: squeezeos-dev
+    user: 1000:1000
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Berlin
+      - SQUEEZEOS_SRC_MIRROR=http://192.168.2.4:8730/poky-cache
+    volumes:
+      - ../poky:/poky
+
+    stdin_open: true # docker run -i
+    tty: true        # docker run -t
+

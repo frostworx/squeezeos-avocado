@@ -11,7 +11,7 @@ ARM_INSTRUCTION_SET = "arm"
 DEPENDS = "libdbi-perl libdbd-sqlite-perl-native"
 DEPENDS = "libdbi-perl libdbi-perl-native sqlite3"
 
-SRC_URI = "http://ralph.irving.sdf.org/squeezeos/DBD-SQLite-${PV}_01.tar.gz"
+SRC_URI = "${SQUEEZEOS_SRC_MIRROR}/DBD-SQLite-${PV}_01.tar.gz"
 
 S = "${WORKDIR}/DBD-SQLite-${PV}_01"
 

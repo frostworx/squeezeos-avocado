@@ -7,7 +7,7 @@ HOMEPAGE = "http://pkg-config.freedesktop.org/wiki/"
 LICENSE = "GPL"
 PR = "r7"
 
-SRC_URI = "https://pkgconfig.freedesktop.org/releases/pkg-config-${PV}.tar.gz \
+SRC_URI = "ENTER_SRC_MIRROR/pkg-config-${PV}.tar.gz \
            file://autofoo.patch;patch=1 \
            file://sysrootfix.patch;patch=1 \
            file://glibconfig-sysdefs.h"

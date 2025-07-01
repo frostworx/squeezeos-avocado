@@ -1,0 +1,67 @@
+# build the image using docker compose
+
+`docker-compose build`
+
+# start the container
+
+the `docker-compose.yml` uses user `1000:1000` by default, because poky doesn't like to be run by `root`.
+adjust it to your needs and make sure the user has *rw* priviledges in `../poky`
+
+`docker-compose up -d --remove-orphans`
+
+# SQUEEZEOS_SRC_MIRROR
+`SQUEEZEOS_SRC_MIRROR` is meant to be a generic url for all source packages, which are
+
+- no longer available upstream
+- complicated/impossible to download in an ancient linux distro (ssl problems)
+- don't have a valid home
+
+ideally those files are hosted by a squeezeos community - maybe later a default
+
+configure `SQUEEZEOS_SRC_MIRROR` in either `docker-compose.yml` or in a renamed `poky/source-mirror.conf-example`
+
+# enter the container
+
+`docker exec -it docker-squeezeos-dev-1 bash`
+
+# compile
+
+`cd /poky`
+`./set-source-mirror` # rolls out the `SQUEEZEOS_SRC_MIRROR` path defined above to multiple files and hardcodes BUILD_ARCH to i686, because docker host most likely ships x86_64
+
+optionally `cp build/conf/local.conf.sample build/conf/local.conf` and adjust it to your needs
+_(I only tested `MACHINE ?= "baby"`, so things might not work with other targets)_ 
+
+`source poky-init-build-env`
+
+`touch conf/sanity.conf` # required because we can't set `/proc/sys/vm/mmap_min_addr` in a container
+
+# expand path, because else opkg-build is not found
+`export PATH="$PATH:/poky/build/tmp-baby/work/i686-linux/opkg-utils-native-svn-r2/temp-staging/usr/local/bin/"` 
+
+
+`bitbake squeezeos-image`
+
+
+# bundled source files
+
+## rootfs.tar.xz
+
+the bundled `rootfs.tar.xz` is a copy from this repo:
+
+https://github.com/yamamuteki/ubuntu-lucid-i386
+
+you're welcome to contribute a more official archive.
+
+## 20230114-updated-utilities-i386.tar.tgz
+
+the bundled `20230114-updated-utilities-i386.tar.tgz` is a copy from
+
+https://sourceforge.net/projects/lmsclients/files/squeezeos/
+
+likely will be added to the global `SQUEEZEOS_SRC_MIRROR` of this repo
+
+## sources.list
+
+updated `sources.list` with available repo urls
+

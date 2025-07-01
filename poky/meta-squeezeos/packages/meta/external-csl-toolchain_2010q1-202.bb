@@ -17,7 +17,7 @@ RPROVIDES = "glibc-utils libsegfault glibc-thread-db"
 PACKAGES_DYNAMIC = "glibc-gconv-* locale-binary-*"
 PR = "r2"
 
-SRC_URI = "https://sourcery.sw.siemens.com/public/gnu_toolchain/arm-none-linux-gnueabi/arm-${PV}-arm-none-linux-gnueabi-i686-pc-linux-gnu.tar.bz2 \
+SRC_URI = "ENTER_SRC_MIRROR/arm-${PV}-arm-none-linux-gnueabi-i686-pc-linux-gnu.tar.bz2 \
 	file://SUPPORTED"
 
 

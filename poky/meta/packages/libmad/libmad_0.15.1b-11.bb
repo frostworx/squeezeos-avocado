@@ -5,7 +5,7 @@ DEPENDS = ""
 LICENSE = "GPL"
 PR = "r0"
 
-SRC_URI = "${RALPHY_SQUEEZEOS}/libmad-${PV}.tar.gz"
+SRC_URI = "${SQUEEZEOS_SRC_MIRROR}/libmad-${PV}.tar.gz"
 
 S = "${WORKDIR}/libmad-${PV}"
 

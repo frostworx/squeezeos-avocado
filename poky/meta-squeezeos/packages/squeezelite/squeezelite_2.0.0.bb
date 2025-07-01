@@ -29,7 +29,7 @@ RDEPENDS_${PN} += " \
 	soxr \
 "
 
-SRC_URI="${RALPHY_SQUEEZEOS}/${PN}-${PV}-${PR}.tar.gz \
+SRC_URI="${SQUEEZEOS_SRC_MIRROR}/${PN}-${PV}-${PR}.tar.gz \
 	file://squeezelite-squeezeos.patch;patch=1 \
 	file://load-libtremor-first.patch;patch=1 \
 	file://tremor-oob.patch;patch=1 \

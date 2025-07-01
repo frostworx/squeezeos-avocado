@@ -1,5 +1,5 @@
 MIRRORS_append () {
-ftp://.*/.*    http://downloads.slimdevices.com/poky-cache/
-http://.*/.*   http://downloads.slimdevices.com/poky-cache/
-https://.*/.*   http://downloads.slimdevices.com/poky-cache/
+ftp://.*/.*    ENTER_SRC_MIRROR/
+http://.*/.*   ENTER_SRC_MIRROR/
+https://.*/.*   ENTER_SRC_MIRROR/
 }

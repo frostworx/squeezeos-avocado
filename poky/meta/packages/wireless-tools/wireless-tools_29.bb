@@ -6,7 +6,7 @@ LICENSE = "GPL"
 PE = "1"
 PR = "r1"
 
-SRC_URI = "http://www.hpl.hp.com/personal/Jean_Tourrilhes/Linux/wireless_tools.29.tar.gz \
+SRC_URI = "ENTER_SRC_MIRROR/wireless_tools.29.tar.gz \
            file://man.patch;patch=1 \
 	   file://wireless-tools.if-pre-up \
 	   file://zzz-wireless.if-pre-up"
