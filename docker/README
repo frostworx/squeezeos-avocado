@@ -10,13 +10,6 @@ adjust it to your needs and make sure the user has *rw* priviledges in `../poky`
 `docker-compose up -d --remove-orphans`
 
 # SQUEEZEOS_SRC_MIRROR
-`SQUEEZEOS_SRC_MIRROR` is meant to be a generic url for all source packages, which are
-
-- no longer available upstream
-- complicated/impossible to download in an ancient linux distro (ssl problems)
-- don't have a valid home
-
-ideally those files are hosted by a squeezeos community - maybe later a default
 
 configure `SQUEEZEOS_SRC_MIRROR` in either `docker-compose.yml` or in a renamed `poky/source-mirror.conf-example`
 
