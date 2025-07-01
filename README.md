@@ -1,12 +1,12 @@
 # squeezeos-avocado
 
-wip
+*WIP* (first builds worked fine, but not ready yet)
 
-first builds worked fine, but not ready yet
+Custom squeezeos fork with multiple cleanups, which allows to build squeezebox firmware files from a docker container without the need of setting up a fully bloated ancient vm.
 
-## Changes:
+## Changes
 
-### cleanups in source urls:
+### cleanups in source urls
   intruducing a `SQUEEZEOS_SRC_MIRROR` variable, meant to be a generic url for all source packages, which are
    - no longer available upstream
    - complicated/impossible to download in an ancient linux distro (ssl problems)
