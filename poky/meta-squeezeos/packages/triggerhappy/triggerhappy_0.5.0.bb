@@ -14,6 +14,7 @@ SRC_URI = " \
 	file://baby.conf \
 	file://hassio.conf-template \
 	file://hassio-keypress-send \
+	file://start_triggerhappy \
 "
 
 S="${WORKDIR}/${PN}-release-${PV}"
@@ -22,11 +23,12 @@ do_make() {
 	oe_runmake
 } 
 
-do_install() { 
+do_install() {
 	install -d ${D}${bindir}
 	install -m 755 ${S}/thd ${D}${bindir}/thd
 	install -m 755 ${S}/th-cmd ${D}${bindir}/th-cmd
 	install -m 755 ${WORKDIR}/hassio-keypress-send ${D}${bindir}/hassio-keypress-send
+	install -m 755 ${WORKDIR}/start_triggerhappy ${D}${bindir}/start_triggerhappy
     install -d ${D}/etc/triggerhappy/triggers.d
 	install -m 755 ${WORKDIR}/baby.conf ${D}/etc/triggerhappy/triggers.d
 	install -m 755 ${WORKDIR}/hassio.conf-template ${D}/etc/
@@ -35,6 +37,7 @@ do_install() {
 FILES_${PN} = "/usr/bin/thd \
 /usr/bin/th-cmd \
 /usr/bin/hassio-keypress-send \
+/usr/bin/start_triggerhappy \
 /etc/triggerhappy/triggers.d/baby.conf \
 /etc/hassio.conf-template \
 "

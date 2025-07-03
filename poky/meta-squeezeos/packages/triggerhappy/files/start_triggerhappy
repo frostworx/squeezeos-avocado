@@ -1,0 +1,3 @@
+#!/bin/sh
+
+/usr/bin/thd --triggers /etc/triggerhappy/triggers.d/ --deviceglob /dev/input/event* &

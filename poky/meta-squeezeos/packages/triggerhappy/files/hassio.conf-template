@@ -1,3 +1,4 @@
 THWH="87161aac-f0ae-4939-8ad3-4f36b6482bb9"  # triggerhappy button webhook
 HA="homeassistant.local"                     # home assistant ip/hostname
 HP=8123                                      # home assistant port
+AUTOSTART_TH=1                               # autostart triggerhappy on boot when this is set to in file '/etc/hassio.conf' 
