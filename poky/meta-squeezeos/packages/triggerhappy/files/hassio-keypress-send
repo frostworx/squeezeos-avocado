@@ -1,0 +1,30 @@
+#!/bin/sh
+
+# sends keypress "$1" (coming from triggerhappy) to homeassistant via webhook
+# if not defined in /etc/hassio.conf
+
+# - homeassistant "$HA" is the LMS server ip (+ port 8123)
+# - the webhook used in HA is the md5sum of the own macadress
+
+HASSCONF="/etc/hassio.conf"
+HP=8123  # default home assistant port
+
+if [ -f "$HASSCONF" ]; then
+  source "$HASSCONF"
+fi
+
+if [ -z "$HA" ]; then
+ HA="$(cat "/etc/squeezeplay/userpath/settings/SlimDiscovery.lua" | awk -F 'ip=' '{print $2}'| awk -F',' '{print $1}'  | sed "s:\"::g" | sed "s:\:::g")"
+fi
+
+if [ -z "$THWH" ]; then
+ THWH="$(cat "/etc/squeezeplay/userpath/settings/SlimDiscovery.lua" | awk -F 'playerId=' '{print $2}' | awk -F',' '{print $1}' | md5sum | awk '{print $1}')"
+fi
+
+if [ -z "$HASSIO" ] && [ -n "$HA" ] && [ -n "$HP" ]; then
+  HASSIOWH="http://$HA:$HP/api/webhook"
+fi
+
+if [ -n "$1" ] && [ -n "$HASSIOWH" ] &&  [ -n "$THWH" ]; then
+  wget --post-data "key=$1" $HASSIOWH/$THWH -q -O-
+fi
