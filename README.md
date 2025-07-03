@@ -14,16 +14,26 @@ Custom squeezeos fork with multiple cleanups, which allows to build squeezebox f
 
 Ideally those files are hosted by a squeezeos community (maybe lyrion.org?)
 For now there is no public url hosting those files
-so it defaults to the locally hosted url http://127.0.0.1:8730/poky-cache
+so it defaults to the locally hosted url `http://nginx/poky-cache`
 which you could quickly launch in a separate docker container using this
-side repo: https://github.com/frostworx/squeezeos-avocado-poky-src-mirror
+side repo: `https://github.com/frostworx/squeezeos-avocado-poky-src-mirror`
 
 ### docker support
 Yes, finally the squeezeos firmware can be built completely in a docker container.
 Implementation is a bit rough for now, but already works fine (successfully built working 'baby' firmwares).
 
 
-see README in the docker subdirectory for details
+see `README` in the docker subdirectory for details
+see additional `README-with-local-src-mirror.md`
+if you want to create/use the side repo project `https://github.com/frostworx/squeezeos-avocado-poky-src-mirror`
+as source mirror
+
+### triggerhappy
+the "lightweight hotkey daemon" triggerhappy was added.
+I added a configuration for squeezebox radio (baby.conf) buttons which in turn can be used to trigger automations in home-assistant.
+Not completely ready/documented yet, but it already works fine (every button/release of every button can trigger an automation in home assistant)
+It will replace my previous https://github.com/frostworx/hassio-squeezebox-buttons "hack"
+
 
 I'm undecided yet where to go from here.
 
