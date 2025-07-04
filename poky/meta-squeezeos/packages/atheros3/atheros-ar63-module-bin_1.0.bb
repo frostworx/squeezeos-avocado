@@ -50,7 +50,8 @@ do_install() {
 	install -m 0755 ${WORKDIR}/loadAR6000l.sh ${INSTALL_DIR}/loadAR6000l.sh
     install -m 0755 ${WORKDIR}/watch-arp.sh ${INSTALL_DIR}/watch-arp.sh
     install -m 0755 ${WORKDIR}/restart-wifi.sh ${INSTALL_DIR}/restart-wifi.sh
-	install -m 0755 ${WORKDIR}/wlan ${D}${sysconfdir}/init.d/wlan
+    install -d ${D}/etc/init.d
+	install -m 0755 ${WORKDIR}/wlan ${D}/etc/init.d/wlan
 }
 
 
